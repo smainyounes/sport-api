@@ -27,6 +27,22 @@
 			return $this->single();
 		}
 		
+		public function CheckImg($id_sport, $id_img)
+		{
+			$this->query("SELECT id_img FROM img WHERE id_img = :id_img AND id_sport = :id_sport");
+
+			$this->bind(":id_img", $id_img);
+			$this->bind(":id_sport", $id_sport);
+
+			$res = $this->single();
+
+			if ($res) {
+				return true;
+			}else{
+				return false;
+			}
+		}
+
 		public function AddImg($id_sport, $img_name)
 		{
 			$this->query("INSERT INTO img(id_sport, link) VALUES(:id, :link)");
@@ -54,7 +70,7 @@
 			}
 		}
 
-		public function DeleteAllImgProd($id_sport)
+		public function DeleteAllImgSport($id_sport)
 		{
 			$this->query("DELETE FROM img WHERE id_sport = :id");
 			$this->bind(":id", $id_sport);
