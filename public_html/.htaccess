@@ -1,6 +1,6 @@
 DirectoryIndex index.php
 RewriteEngine on
-RewriteBase /sport/public_html/
+RewriteBase /sport-api/public_html/
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
