@@ -25,6 +25,15 @@
 			return $this->resultSet();
 		}
 
+		public function CountAll()
+		{
+			$this->query("SELECT COUNT(id_salle) nbr FROM salle");
+
+			$res = $this->single();
+
+			return $res->nbr;
+		}
+
 		public function Random($limit)
 		{
 			$this->query("SELECT * FROM agence WHERE etat_salle = :etat ORDER BY RAND() LIMIT :num");
