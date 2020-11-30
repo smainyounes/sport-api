@@ -53,6 +53,10 @@
 
 		public function Login()
 		{
+			if (!isset($_POST['username']) || !isset($_POST['password'])) {
+				return null;
+			}
+
 			$this->query("SELECT * FROM salle WHERE username = :username");
 
 			$this->bind(":username", strip_tags($_POST['username']));
@@ -125,8 +129,8 @@
 			}
 			
 			$sql = "INSERT INTO 
-						salle(nom, username, password, wilaya, commune, address, tel, img_prof, img_cover, description_salle) 
-						VALUES(:nom, :username, :password, :wilaya, :commune, :address, :tel, :img_prof, :img_cover, :description)";
+						salle(nom, username, password, wilaya, commune, address, tel, description_salle) 
+						VALUES(:nom, :username, :password, :wilaya, :commune, :address, :tel, :description)";
 			$this->query($sql);
 
 			$this->bind(":nom", strip_tags($_POST['nom']));
@@ -136,8 +140,6 @@
 			$this->bind(":commune", strip_tags($_POST['commune']));
 			$this->bind(":address", strip_tags($_POST['address']));
 			$this->bind(":tel", strip_tags($_POST['tel']));
-			$this->bind(":img_prof", "1.jpg");
-			$this->bind(":img_cover", "1.jpg");
 			$this->bind(":description", strip_tags($_POST['description']));
 
 			try {
