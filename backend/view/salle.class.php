@@ -14,6 +14,7 @@
 		public function SalleJson($data)
 		{
 			return ['id_salle' => $data->id_salle,
+					'slug' => $data->slug,
 					'nom_salle' => $data->nom,
 					'wilaya' => $data->wilaya,
 					'commune' => $data->commune,
@@ -39,7 +40,7 @@
 				}
 
 			}else{
-				$json = ['status' => 'error', 'data' => ['msg' => 'no result found']];
+				$json = ['status' => 'error', 'msg' => 'no result found'];
 			}
 
 			echo json_encode($json, JSON_PRETTY_PRINT);
@@ -53,7 +54,7 @@
 			if ($data) {
 				$json = ['status' => 'success', 'data' => $this->SalleJson($data)];
 			}else{
-				$json = ['status' => 'error', 'data' => ['msg' => 'no result found']];
+				$json = ['status' => 'error', 'msg' => 'no result found'];
 			}
 
 			echo json_encode($json, JSON_PRETTY_PRINT);
@@ -72,7 +73,7 @@
 				}
 
 			}else{
-				$json = ['status' => 'error', 'data' => ['msg' => 'no result found']];
+				$json = ['status' => 'error', 'msg' => 'no result found'];
 			}
 
 			echo json_encode($json, JSON_PRETTY_PRINT);
