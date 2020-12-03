@@ -11,10 +11,10 @@
 			parent::__construct();
 		}
 
-		public function GetImages($id_sport)
+		public function GetImages($id_salle)
 		{
-			$this->query("SELECT * FROM img WHERE id_sport = :id");
-			$this->bind(":id", $id_sport);
+			$this->query("SELECT * FROM img WHERE id_salle = :id");
+			$this->bind(":id", $id_salle);
 
 			return $this->resultSet();
 		}
@@ -27,12 +27,12 @@
 			return $this->single();
 		}
 		
-		public function CheckImg($id_sport, $id_img)
+		public function CheckImg($id_salle, $id_img)
 		{
-			$this->query("SELECT id_img FROM img WHERE id_img = :id_img AND id_sport = :id_sport");
+			$this->query("SELECT id_img FROM img WHERE id_img = :id_img AND id_salle = :id_salle");
 
 			$this->bind(":id_img", $id_img);
-			$this->bind(":id_sport", $id_sport);
+			$this->bind(":id_salle", $id_salle);
 
 			$res = $this->single();
 
@@ -43,10 +43,10 @@
 			}
 		}
 
-		public function AddImg($id_sport, $img_name)
+		public function AddImg($id_salle, $img_name)
 		{
-			$this->query("INSERT INTO img(id_sport, link) VALUES(:id, :link)");
-			$this->bind(":id", $id_sport);
+			$this->query("INSERT INTO img(id_salle, link) VALUES(:id, :link)");
+			$this->bind(":id", $id_salle);
 			$this->bind(":link", $img_name);
 
 			try {
@@ -70,10 +70,10 @@
 			}
 		}
 
-		public function DeleteAllImgSport($id_sport)
+		public function DeleteAllImgSalle($id_salle)
 		{
-			$this->query("DELETE FROM img WHERE id_sport = :id");
-			$this->bind(":id", $id_sport);
+			$this->query("DELETE FROM img WHERE id_salle = :id");
+			$this->bind(":id", $id_salle);
 
 			try {
 				$this->execute();
