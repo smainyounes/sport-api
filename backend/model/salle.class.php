@@ -17,6 +17,7 @@
 
 		public function GetAll($page, $limit)
 		{
+			$limit = (INT) $limit;
 			$this->query("SELECT * FROM salle ORDER BY id_salle DESC LIMIT :num OFFSET :start");
 
 			$this->bind(":num", $limit);
@@ -36,7 +37,8 @@
 
 		public function Random($limit)
 		{
-			$this->query("SELECT * FROM agence WHERE etat_salle = :etat ORDER BY RAND() LIMIT :num");
+			$limit = (INT) $limit;
+			$this->query("SELECT * FROM salle WHERE etat_salle = :etat ORDER BY RAND() LIMIT :num");
 
 			$this->bind(":etat", "active");
 			$this->bind(":num", $limit);
@@ -46,7 +48,7 @@
 
 		public function Detail($id_salle)
 		{		
-			$this->query("SELECT * FROM salle WHERE id_salle = :id");
+			$this->query("SELECT * FROM salle WHERE id_salle = :id OR slug = :id");
 			$this->bind(":id", $id_salle);
 			return $this->single();	 
 		}
@@ -100,6 +102,17 @@
 			}
 		}
 
+		public function CountSlug($slug)
+		{
+			$this->query("SELECT COUNT(id_salle) nbr FROM salle WHERE slug = :slug");
+
+			$this->bind(":slug", $slug);
+
+			$res = $this->single();
+
+			return $res->nbr;
+		}
+
 		/**
 		 * Setters
 		 */
@@ -128,9 +141,16 @@
 				return false;
 			}
 			
+			$slug = slugify($_POST['nom']);
+			$count = $this->CountSlug($slug);
+
+			if ($count > 0) {
+				$slug = slugify($_POST['nom'] . " $count");
+			}
+			
 			$sql = "INSERT INTO 
-						salle(nom, username, password, wilaya, commune, address, tel, description_salle) 
-						VALUES(:nom, :username, :password, :wilaya, :commune, :address, :tel, :description)";
+						salle(nom, username, password, wilaya, commune, address, tel, description_salle, slug) 
+						VALUES(:nom, :username, :password, :wilaya, :commune, :address, :tel, :description, :slug)";
 			$this->query($sql);
 
 			$this->bind(":nom", strip_tags($_POST['nom']));
@@ -141,6 +161,7 @@
 			$this->bind(":address", strip_tags($_POST['address']));
 			$this->bind(":tel", strip_tags($_POST['tel']));
 			$this->bind(":description", strip_tags($_POST['description']));
+			$this->bind(":slug", $slug);
 
 			try {
 				$this->execute();
