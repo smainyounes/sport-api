@@ -113,6 +113,28 @@
 			return $res->nbr;
 		}
 
+		public function ProfImgName($id_salle)
+		{
+			$this->query("SELECT img_prof FROM salle WHERE id_salle = :id");
+
+			$this->bind(":id", $id_salle);
+
+			$res = $this->single();
+
+			return $res->img_prof;
+		}
+
+		public function CoverImgName($id_salle)
+		{
+			$this->query("SELECT img_cover FROM salle WHERE id_salle = :id");
+
+			$this->bind(":id", $id_salle);
+
+			$res = $this->single();
+
+			return $res->img_cover;
+		}
+
 		/**
 		 * Setters
 		 */

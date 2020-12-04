@@ -57,6 +57,11 @@
 			$this->view_salle->Random($limit);
 		}
 
+		public function GetGallery($id_salle)
+		{
+			# code...
+		}
+
 		/**
 		 * Salle user methods
 		 */
@@ -102,6 +107,72 @@
 					echo json_encode(['status' => 'error', 'msg' => 'infos were not updated'], JSON_PRETTY_PRINT);
 				}
 			}
+		}
+
+		public function Imgprof($id_salle, $tokken)
+		{
+			$this->forbidden($id_salle, $tokken);
+
+			$res = UploadPic($_FILES['img'], "profile");
+
+			if ($res['status'] !== 'success') {
+				die(json_encode($res, JSON_PRETTY_PRINT));
+			}
+
+			$mod = new model_salle();
+
+			// get old profile img
+			$old_img = $mod->ProfImgName($id_salle);
+
+			if (!$mod->ChangeProfilePic($id_salle, $res['data']['filename'])) {
+				// not inserted in database delete uploaded file
+				DeletePic("img/" . $res['data']['filename']);
+				die(json_encode(['status' => 'error', 'msg' => 'not inserted in database'], JSON_PRETTY_PRINT));
+			}
+
+			if ($old_img) {
+				DeletePic("img/" . $old_img);
+			}
+
+			echo json_encode(['status' => 'success', 'data' => ['img_prof' => PUBLIC_URL . 'img/' . $res['data']['filename']]], JSON_PRETTY_PRINT);
+		}
+
+		public function Imgcover($id_salle, $tokken)
+		{
+			$this->forbidden($id_salle, $tokken);
+
+			$res = UploadPic($_FILES['img'], "cover");
+
+			if ($res['status'] !== 'success') {
+				die(json_encode($res, JSON_PRETTY_PRINT));
+			}
+
+			$mod = new model_salle();
+
+			// get old profile img
+			$old_img = $mod->CoverImgName($id_salle);
+
+			if (!$mod->ChangeCoverPic($id_salle, $res['data']['filename'])) {
+				// not inserted in database delete uploaded file
+				DeletePic("img/" . $res['data']['filename']);
+				die(json_encode(['status' => 'error', 'msg' => 'not inserted in database'], JSON_PRETTY_PRINT));
+			}
+
+			if ($old_img) {
+				DeletePic("img/" . $old_img);
+			}
+
+			echo json_encode(['status' => 'success', 'data' => ['img_cover' => PUBLIC_URL . 'img/' . $res['data']['filename']]], JSON_PRETTY_PRINT);
+		}
+
+		public function AddToGallery($id_salle, $tokken)
+		{
+			# code...
+		}
+
+		public function DeleteFromGallery($id_salle, $tokken, $id_image)
+		{
+			# code...
 		}
 
 		public function Login()
