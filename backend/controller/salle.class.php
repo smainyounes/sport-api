@@ -47,6 +47,11 @@
 			$this->view_salle->GetAll($page, $limit);
 		}
 
+		public function Search($wilaya = "tout", $commune = "tout", $page = 1, $limit = 9)
+		{
+			$this->view_salle->Search($wilaya, $commune, $page, $limit);
+		}
+
 		public function Detail($id_salle = 0)
 		{
 			$this->view_salle->Detail($id_salle);
@@ -59,7 +64,7 @@
 
 		public function GetGallery($id_salle)
 		{
-			# code...
+			$this->view_salle->Gallery($id_salle);
 		}
 
 		/**
@@ -167,12 +172,51 @@
 
 		public function AddToGallery($id_salle, $tokken)
 		{
-			# code...
+			$this->forbidden($id_salle, $tokken);
+
+			if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+				// upload img 
+				$res = UploadPic($_FILES['img'], "sport");
+
+				if ($res['status'] !== "success") {
+					die(json_encode($res, JSON_PRETTY_PRINT));
+				}
+
+				// insert it in database
+				$mod = new model_image();
+
+				if (!$mod->AddImg($id_salle, $res['data']['filename'])) {
+					// not inserted in db delete it
+					DeletePic("img/" . $res['data']['filename']);
+					DeletePic("img/preview/" . $res['data']['filename']);
+
+					die(json_encode(['status' => 'error', 'msg' => 'not inserted in database'], JSON_PRETTY_PRINT));
+				}
+
+				echo json_encode(['status' => 'success', 'data' => ['filename' => $res['data']['filename'], 'preview_url' => PUBLIC_URL . "img/preview/". $res['data']['filename'], 'img_url' => PUBLIC_URL . "img/". $res['data']['filename']]], JSON_PRETTY_PRINT);
+			}
 		}
 
 		public function DeleteFromGallery($id_salle, $tokken, $id_image)
 		{
-			# code...
+			$this->forbidden($id_salle, $tokken);
+
+			$mod = new model_image();
+
+			if (!$mod->CheckImg($id_salle, $id_img)) {
+				die(json_encode(['status' => 'error', 'msg' => 'not the owner'], JSON_PRETTY_PRINT));
+			}
+
+			$res = $mod->GetImgLink($id_image);
+
+			if (!$mod->DeleteImg($id_img)) {
+				die(json_encode(['status' => 'error', 'msg' => 'not deleted'], JSON_PRETTY_PRINT));
+			}
+
+			DeletePic("img/" . $res->link);
+			DeletePic("img/preview/" . $res->link);
+
+			echo json_encode('status' => 'success', JSON_PRETTY_PRINT);
 		}
 
 		public function Login()

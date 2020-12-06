@@ -45,7 +45,27 @@
 
 			echo json_encode($json, JSON_PRETTY_PRINT);
 		}
-	
+		
+		public function Search($wilaya, $commune, $page, $limit)
+		{
+			$data = $this->mod_salle->Search($wilaya, $commune, $page, $limit);
+			$json = [];
+
+			if ($data) {
+				$json['status'] = "success";
+				$json["data"]["infos"] = ['nombre_page' => ceil($this->mod_salle->CountSearch($wilaya, $commune) / $limit), 'page' => $page];
+
+				foreach ($data as $salle) {
+					$json['data']['salles'][] = $this->SalleJson($salle);
+				}
+
+			}else{
+				$json = ['status' => 'error', 'msg' => 'no result found'];
+			}
+
+			echo json_encode($json, JSON_PRETTY_PRINT);
+		}
+
 		public function Detail($id_salle)
 		{
 			$data = $this->mod_salle->Detail($id_salle);
@@ -70,6 +90,32 @@
 
 				foreach ($data as $salle) {
 					$json['data']['salles'][] = $this->SalleJson($salle);
+				}
+
+			}else{
+				$json = ['status' => 'error', 'msg' => 'no result found'];
+			}
+
+			echo json_encode($json, JSON_PRETTY_PRINT);
+		}
+
+		public function Gallery($id_salle)
+		{
+			$mod = new model_image();
+
+			$data = $mod->GetImages($id_salle);
+			$json = [];
+
+			if ($data) {
+				$json['status'] = "success";
+
+				foreach($data as $image){
+					if (file_exists("img/" . $image->link) && file_exists("img/preview/" . $image->link)) {
+						$json['data']['images'][] = ['id_image' => $image->id_img,
+													 'filename' => $image->link,
+													 'preview_url' => PUBLIC_URL . "img/preview/" . $image->link,
+													 'img_url' => PUBLIC_URL . "img/" . $image->link];
+					}
 				}
 
 			}else{

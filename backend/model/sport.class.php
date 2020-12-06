@@ -17,18 +17,11 @@
 
 		public function GetAll($page, $limit)
 		{
+			$limit = (INT) $limit;
 
-			$sql = "SELECT *, salle.id_salle AS id_salle
-						FROM salle, sport LEFT JOIN img
-						ON sport.id_sport = img.id_sport
-						WHERE NOT EXISTS(
-						    SELECT * 
-						    FROM img as T2BIS -- just an alias table
-						    WHERE T2BIS.id_sport = sport.id_sport -- usual join
-						    AND img.id_img > T2BIS.id_img -- change operator to take the last instead of the first
-						) AND salle.id_salle = sport.id_salle ORDER BY sport.id_sport DESC LIMIT :num OFFSET :start";
-			$this->query($sql);
+			$this->query("SELECT * FROM ((sport INNER JOIN salle ON sport.id_salle = salle.id_salle) INNER JOIN sport_names ON sport_names.id_sport_name = sport.id_sport_name) WHERE salle.etat_salle = :etat ORDER BY sport.id_sport DESC LIMIT :num OFFSET :start");
 
+			$this->bind(":etat", "active");
 			$this->bind(":num", $limit);
 			$this->bind(":start", ($page - 1) * $limit);
 
@@ -37,7 +30,9 @@
 
 		public function Random($limit)
 		{
-			$this->query("SELECT * FROM sport INNER JOIN salle WHERE salle.etat_salle = :etat ORDER BY RAND() LIMIT :num");
+			$limit = (INT) $limit;
+
+			$this->query("SELECT * FROM ((sport INNER JOIN salle ON sport.id_salle = salle.id_salle) INNER JOIN sport_names ON sport_names.id_sport_name = sport.id_sport_name) WHERE salle.etat_salle = :etat ORDER BY RAND() LIMIT :num");
 
 			$this->bind(":etat", "active");
 			$this->bind(":num", $limit);
@@ -47,29 +42,27 @@
 
 		public function GetBySalle($id_salle, $page, $limit)
 		{
-			$limit = 20;
-			$start = ($page - 1) * $limit;
+			$limit = (INT) $limit;
 
-			$sql = "SELECT *, salle.id_salle AS id_salle
-						FROM salle, sport LEFT JOIN img
-						ON sport.id_sport = img.id_sport
-						WHERE NOT EXISTS(
-						    SELECT * 
-						    FROM img as T2BIS -- just an alias table
-						    WHERE T2BIS.id_sport = sport.id_sport -- usual join
-						    AND img.id_img > T2BIS.id_img -- change operator to take the last instead of the first
-						) AND salle.id_salle = sport.id_salle AND salle.id_salle = :id ORDER BY sport.id_sport DESC LIMIT :num OFFSET :start";
-			$this->query($sql);
+			$this->query("SELECT * FROM ((sport INNER JOIN salle ON sport.id_salle = salle.id_salle) INNER JOIN sport_names ON sport_names.id_sport_name = sport.id_sport_name) WHERE (salle.id_salle = :id OR salle.slug = :id) AND salle.etat_salle = :etat ORDER BY sport.id_sport DESC LIMIT :num OFFSET :start");
 
 			$this->bind(":id", $id_salle);
+			$this->bind(":etat", "active");
 			$this->bind(":num", $limit);
 			$this->bind(":start", ($page - 1) * $limit);
 
+			try {
 			return $this->resultSet();
+				
+			} catch (Exception $e) {
+				echo "$e";
+			}
 		}
 
 		public function Search($wilaya, $commune, $keyword, $page, $limit)
 		{
+			$limit = (INT) $limit;
+
 			$conc1 = "";
 			$conc2 = "";
 
@@ -81,15 +74,8 @@
 				$conc2 = " AND salle.commune = :commune ";
 			}
 
-			$sql = "SELECT *, salle.id_salle AS id_salle
-						FROM salle, sport LEFT JOIN img
-						ON sport.id_sport = img.id_sport
-						WHERE NOT EXISTS(
-						    SELECT * 
-						    FROM img as T2BIS -- just an alias table
-						    WHERE T2BIS.id_sport = sport.id_sport -- usual join
-						    AND img.id_img > T2BIS.id_img -- change operator to take the last instead of the first
-						) AND salle.id_salle = sport.id_salle AND (sport.nom_arab LIKE :keyword OR sport.nom_french LIKE :keyword) $conc1 $conc2 ORDER BY sport.id_sport DESC LIMIT :num OFFSET :start";
+			$sql = "SELECT * FROM ((sport INNER JOIN salle ON sport.id_salle = salle.id_salle) INNER JOIN sport_names ON sport_names.id_sport_name = sport.id_sport_name) WHERE (sport_names.nom_ar LIKE :keyword OR sport_names.nom_fr LIKE :keyword) $conc1 $conc2 AND salle.etat_salle = :etat ORDER BY sport.id_sport DESC LIMIT :num OFFSET :start";
+
 			$this->query($sql);
 			$this->bind(":keyword", "%{$keyword}%");
 
@@ -101,6 +87,7 @@
 				$this->bind(":commune", $commune);
 			}
 
+			$this->bind(":etat", "active");
 			$this->bind(":num", $limit);
 			$this->bind(":start", ($page - 1) * $limit);
 
@@ -109,7 +96,7 @@
 
 		public function Detail($id_sport)
 		{
-			$this->query("SELECT * FROM sport INNER JOIN salle ON sport.id_salle = salle.id_salle WHERE sport.id_sport = :id");
+			$this->query("SELECT * FROM ((sport INNER JOIN salle ON sport.id_salle = salle.id_salle) INNER JOIN sport_names ON sport_names.id_sport_name = sport.id_sport_name) WHERE sport.id_sport = :id");
 
 			$this->bind(":id", $id_sport);
 
@@ -129,9 +116,10 @@
 				$conc2 = " AND salle.commune = :commune ";
 			}
 
-			$sql = "SELECT COUNT(id_sport) nbr FROM salle INNER JOIN sport ON salle.id_salle = sport.id_salle WHERE nom LIKE :keyword $conc1 $conc2";
+			$sql = "SELECT COUNT(sport.id_sport) AS nbr FROM ((sport INNER JOIN salle ON sport.id_salle = salle.id_salle) INNER JOIN sport_names ON sport_names.id_sport_name = sport.id_sport_name) WHERE salle.etat_salle = :etat AND nom LIKE :keyword $conc1 $conc2";
 
 			$this->query($sql);
+			$this->bind(":etat", "active");
 			$this->bind(":keyword", "%{$keyword}%");
 			if ($conc1 != "") {
 				$this->bind(":wilaya", $wilaya);
@@ -147,12 +135,31 @@
 
 		public function CountBySalle($id_salle)
 		{
-			$this->query("SELECT COUNT(id_sport) nbr FROM sport WHERE id_salle = :id");
+			$this->query("SELECT COUNT(sport.id_sport) nbr FROM sport INNER JOIN salle ON sport.id_salle = salle.id_salle WHERE id_salle = :id AND salle.etat_salle = :etat");
 
 			$this->bind(":id", $id_salle);
+			$this->bind(":etat", "active");
 
 			$res = $this->single();
 			return $res->nbr;
+		}
+
+		public function CountAll()
+		{
+			$this->query("SELECT COUNT(sport.id_sport) nbr FROM sport INNER JOIN salle ON sport.id_salle = salle.id_salle WHERE salle.etat_salle = :etat");
+
+			$this->bind(":etat", "active");
+
+			$res = $this->single();
+			
+			return $res->nbr;
+		}
+
+		public function Names()
+		{
+			$this->query("SELECT * FROM sport_names");
+
+			return $this->resultSet();
 		}
 
 		/**
@@ -161,16 +168,15 @@
 
 		public function Add($id_salle)
 		{
-			$this->query("INSERT INTO sport(id_salle, nom_arab, nom_french, description_sport) VALUES(:id, :arab, :fr, :des)");
+			$this->query("INSERT INTO sport(id_salle, id_sport_name, description_sport) VALUES(:id, :id_sport_name, :des)");
 
 			$this->bind(":id", $id_salle);
-			$this->bind(":arab", strip_tags($_POST['arab']));
-			$this->bind(":fr", strip_tags($_POST['fr']));
+			$this->bind(":id_sport_name", $_POST['id_sport_name']);
 			$this->bind(":des", strip_tags($_POST['description']));
 
 			try {
 				$this->execute();
-				return true;
+				return $this->LastId();
 			} catch (Exception $e) {
 				return false;
 			}
@@ -178,10 +184,9 @@
 
 		public function EditInfos($id_sport)
 		{
-			$this->query("UPDATE sport SET nom_arab = :arab, nom_french = :fr, description_sport = :des WHERE id_sport = :id");
+			$this->query("UPDATE sport SET id_sport_name = :id_sport_name, description_sport = :des WHERE id_sport = :id");
 
-			$this->bind(":arab", strip_tags($_POST['arab']));
-			$this->bind(":fr", strip_tags($_POST['fr']));
+			$this->bind(":id_sport_name", $_POST['id_sport_name']);
 			$this->bind(":des", strip_tags($_POST['description']));
 			$this->bind(":id", $id_salle);
 

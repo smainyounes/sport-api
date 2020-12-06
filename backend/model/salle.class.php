@@ -18,8 +18,9 @@
 		public function GetAll($page, $limit)
 		{
 			$limit = (INT) $limit;
-			$this->query("SELECT * FROM salle ORDER BY id_salle DESC LIMIT :num OFFSET :start");
+			$this->query("SELECT * FROM salle WHERE etat_salle = :etat ORDER BY id_salle DESC LIMIT :num OFFSET :start");
 
+			$this->bind(":etat", "active");
 			$this->bind(":num", $limit);
 			$this->bind(":start", ($page - 1) * $limit);
 
@@ -28,10 +29,77 @@
 
 		public function CountAll()
 		{
-			$this->query("SELECT COUNT(id_salle) nbr FROM salle");
+			$this->query("SELECT COUNT(id_salle) nbr FROM salle WHERE etat_salle = :etat");
+
+			$this->bind(":etat", "active");
 
 			$res = $this->single();
 
+			return $res->nbr;
+		}
+
+		public function Search($wilaya, $commune, $page, $limit)
+		{
+			$limit = (INT) $limit;
+
+			$conc1 = "";
+			$conc2 = "";
+
+			if (strcmp($wilaya, "tout")) {
+				$conc1 = " AND wilaya = :wilaya ";
+			}
+
+			if (strcmp($commune, "tout")) {
+				$conc2 = " AND commune = :commune ";
+			}
+
+			$sql = "SELECT * FROM salle WHERE etat_salle = :etat $conc1 $conc2 ORDER BY id_salle DESC LIMIT :num OFFSET :start";
+
+			$this->query($sql);
+
+			if ($conc1 != "") {
+				$this->bind(":wilaya", $wilaya);
+			}
+
+			if ($conc2 != "") {
+				$this->bind(":commune", $commune);
+			}
+
+			$this->bind(":etat", "active");
+			$this->bind(":num", $limit);
+			$this->bind(":start", ($page - 1) * $limit);
+
+			return $this->resultSet();
+		}
+
+		public function CountSearch($wilaya, $commune)
+		{
+			$conc1 = "";
+			$conc2 = "";
+
+			if (strcmp($wilaya, "tout")) {
+				$conc1 = " AND wilaya = :wilaya ";
+			}
+
+			if (strcmp($commune, "tout")) {
+				$conc2 = " AND commune = :commune ";
+			}
+
+			$sql = "SELECT COUNT(id_salle) nbr FROM salle WHERE etat_salle = :etat $conc1 $conc2";
+
+			$this->query($sql);
+
+			if ($conc1 != "") {
+				$this->bind(":wilaya", $wilaya);
+			}
+
+			if ($conc2 != "") {
+				$this->bind(":commune", $commune);
+			}
+
+			$this->bind(":etat", "active");
+
+			$res = $this->single();
 			return $res->nbr;
 		}
 
@@ -309,8 +377,9 @@
 
 		public function DeleteSalle($id_salle)
 		{
-			$this->query("DELETE FROM salle WHERE id_salle = :id");
+			$this->query("UPDATE salle SET etat_salle = :etat WHERE id_salle = :id");
 
+			$this->bind(":etat", "deleted");
 			$this->bind(":id", $id_salle);
 
 			try {
